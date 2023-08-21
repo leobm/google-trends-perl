@@ -42,7 +42,9 @@
       },
       "runtime" : {
          "requires" : {
-            "perl" : "5.008001"
+            "HTTP::CookieJar" : "0.014",
+            "HTTP::Tinyish" : "0.088",
+            "perl" : "5.020"
          }
       },
       "test" : {
