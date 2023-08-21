@@ -1,4 +1,4 @@
-
+[![Actions Status](https://github.com/leobm/google-trends-perl/actions/workflows/test.yml/badge.svg)](https://github.com/leobm/google-trends-perl/actions)
 # NAME
 
 Google::Trends - It's new $module

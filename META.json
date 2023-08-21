@@ -44,7 +44,9 @@
          "requires" : {
             "HTTP::CookieJar" : "0.014",
             "HTTP::Tinyish" : "0.088",
-            "perl" : "5.020"
+            "List::MoreUtils" : "0.430",
+            "Text::ASCIITable" : "0.22",
+            "perl" : "5.010001"
          }
       },
       "test" : {
@@ -54,6 +56,17 @@
       }
    },
    "release_status" : "unstable",
+   "resources" : {
+      "bugtracker" : {
+         "web" : "https://github.com/leobm/google-trends-perl/issues"
+      },
+      "homepage" : "https://github.com/leobm/google-trends-perl",
+      "repository" : {
+         "type" : "git",
+         "url" : "https://github.com/leobm/google-trends-perl.git",
+         "web" : "https://github.com/leobm/google-trends-perl"
+      }
+   },
    "version" : "0.01",
    "x_serialization_backend" : "JSON::PP version 4.16",
    "x_static_install" : 1
