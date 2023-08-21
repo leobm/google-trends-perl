@@ -1,5 +1,5 @@
 package Google::Trends;
-use 5.010001;
+use v5.24.1;
 use strict;
 use warnings;
 
@@ -8,9 +8,12 @@ use Carp;
 use HTTP::Tiny;
 use JSON::PP;
 use HTTP::CookieJar;
+use URI::Escape;
 use Time::Piece;
 use List::Util qw/reduce/;
 use List::MoreUtils qw/firstidx firstres/;
+use lib './lib';
+use Google::Trends::Utils;
 
 our $VERSION = "0.01";
 
@@ -242,6 +245,117 @@ sub interest_by_region {
     return @rows;
 }
 
+## Request data from Google's Related Topics section and return a hash_ref of data tables
+## If no top and/or rising related topics are found, the value for the key "top" and/or "rising" will be undef
+sub related_topics {
+    my ($self, %args) = @_;
+
+    # make the request
+    my $href_related_payload = {};
+    my $href_result = {};
+print Data::Dumper::Dumper($self->{related_topics_widget_list});
+
+    for my $request_json ($self->{related_topics_widget_list}->@*){
+
+        # ensure we know which keyword we are looking at rather than relying on order
+        my $kw = $request_json->{request}->{restriction}->{complexKeywordsRestriction}->[0]->{value};
+        $kw = '' if (!defined $kw);
+
+        # convert to string as requests will mangle
+        $href_related_payload->{req} = encode_json($request_json->{request});
+        $href_related_payload->{token} = $request_json->{token};
+        $href_related_payload->{tz} = $self->{tz};
+
+        # do request parse the returned json
+        my $json_data = $self->_get_data(
+            url => RELATED_QUERIES_URL,
+            method => GET_METHOD,
+            trim_chars => 5,
+            params => $href_related_payload,
+        );
+
+        # top topics
+        my $df_top = undef;
+        my $top_list = $json_data->{default}->{rankedList}->[0]->{rankedKeyword};
+        if (defined $top_list) {
+            $df_top = json_normalize($top_list, sep => '_');
+        }
+
+        # rising topics
+        my $df_rising = undef;
+        my $rising_list =  $json_data->{default}->{rankedList}->[1]->{rankedKeyword};
+        if (defined $rising_list) {
+            $df_rising = json_normalize( $rising_list, sep => '_');
+        }
+
+        $href_result->{kw} = {rising =>  $df_rising, top => $df_top};
+    }
+    return $href_result;
+}
+
+## Request data from Google's Related Queries section and return a hash_ref of data data tables
+## If no top and/or rising related queries are found, the value for the key "top" and/or "rising" will be undef
+sub related_queries {
+    my ($self, %args) = @_;
+
+    # make the request
+    my $href_related_payload = {};
+    my $href_result = {};
+   
+    for my $request_json ($self->{related_queries_widget_list}->@*){
+
+        # ensure we know which keyword we are looking at rather than relying on order
+        my $kw = $request_json->{request}->{restriction}->{complexKeywordsRestriction}->{keyword}->[0]->{value};
+        $kw = '' if (!defined $kw);
+
+        # convert to string as requests will mangle
+        $href_related_payload->{req} = encode_json($request_json->{request});
+        $href_related_payload->{token} = $request_json->{token};
+        $href_related_payload->{tz} = $self->{tz};
+    
+        # do request parse the returned json
+        my $json_data = $self->_get_data(
+            url => RELATED_QUERIES_URL,
+            method => GET_METHOD,
+            trim_chars => 5,
+            params => $href_related_payload,
+        );
+
+        # top queries
+        my $top_list = $json_data->{default}->{rankedList}->[0]->{rankedKeyword};
+
+        if (defined $top_list) {
+            $top_list = [ map { +{ query => $_->{query}, value => $_->{value}}} @$top_list];
+        }
+
+        # rising queries
+        my $rising_list = $json_data->{default}->{rankedList}->[1]->{rankedKeyword};
+        if (defined $rising_list) {
+            $rising_list = [ map { +{ query => $_->{query}, value => $_->{value}}} @$rising_list];
+        }
+        $href_result->{$kw} = {'top' =>  $top_list, 'rising' => $rising_list};
+    }
+    return $href_result;
+}
+
+## Request data from Google's Keyword Suggestion dropdown and return a hash_ref
+sub suggestions {
+
+    my ($self, $keyword, %args) = @_; 
+
+    my $options = {
+        hl => $args{hl} // $self->{hl}
+    };
+
+    my $json_data = $self->_get_data(
+        url => SUGGESTIONS_URL .  uri_escape($keyword),
+        params => $options,
+        method => GET_METHOD,
+        trim_chars => 5
+    );
+    return $json_data->{default}->{topics};
+}
+
 ## Request available categories data from Google's API and return a hash_ref
 sub categories {
 
@@ -359,6 +473,8 @@ sub _get_data {
         ## TODO Error
     }
 }
+
+
 
 sub _is_arg_not_of {
     my $arg = shift;

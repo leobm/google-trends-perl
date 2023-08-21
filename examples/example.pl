@@ -9,6 +9,7 @@ use lib "$FindBin::Bin/../lib";
 use Google::Trends;
 
 my $trends = Google::Trends->new(hl =>'de', tz => '-120');
+
 ##print Data::Dumper::Dumper($trends->categories());
 
 $trends->build_payload(
@@ -24,7 +25,6 @@ $trends->build_payload(
 #    ->addRow(\@over_time)
 #    ->draw();
 
-
 my @by_region = $trends->interest_by_region(
     resolution => 'REGION',
     sort_by_kw_val => 'python'
@@ -34,7 +34,7 @@ my $ascii_table = Text::ASCIITable->new({ chaining => 1 })
     ->setCols(shift @by_region)
     ->addRow(\@by_region)
     ->draw();
-
 print $ascii_table; 
-#print Data::Dumper::Dumper(\@by_region);
 
+my $href_related_queries = $trends->related_queries();
+print Data::Dumper::Dumper($href_related_queries);

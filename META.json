@@ -46,7 +46,8 @@
             "HTTP::Tinyish" : "0.088",
             "List::MoreUtils" : "0.430",
             "Text::ASCIITable" : "0.22",
-            "perl" : "5.010001"
+            "URI" : "5.19",
+            "perl" : "v5.24.1"
          }
       },
       "test" : {
