@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Exporter 'import';
-our @EXPORT_OK = qw(json_normalize);
+our @EXPORT = qw(json_normalize);
 
 ## :para data hash_ref ^ array_ref of hash_ref
 ## see https://pandas.pydata.org/docs/reference/api/pandas.json_normalize.html

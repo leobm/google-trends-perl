@@ -11,7 +11,7 @@ use HTTP::CookieJar;
 use URI::Escape;
 use Time::Piece;
 use List::Util qw/reduce/;
-use List::MoreUtils qw/firstidx firstres/;
+use List::MoreUtils qw/firstidx firstres firstval/;
 use lib './lib';
 use Google::Trends::Utils;
 
@@ -253,7 +253,8 @@ sub related_topics {
     # make the request
     my $href_related_payload = {};
     my $href_result = {};
-print Data::Dumper::Dumper($self->{related_topics_widget_list});
+    
+    #print Data::Dumper::Dumper($self->{related_topics_widget_list});
 
     for my $request_json ($self->{related_topics_widget_list}->@*){
 
@@ -285,7 +286,7 @@ print Data::Dumper::Dumper($self->{related_topics_widget_list});
         my $df_rising = undef;
         my $rising_list =  $json_data->{default}->{rankedList}->[1]->{rankedKeyword};
         if (defined $rising_list) {
-            $df_rising = json_normalize( $rising_list, sep => '_');
+            $df_rising = json_normalize($rising_list, sep => '_');
         }
 
         $href_result->{kw} = {rising =>  $df_rising, top => $df_top};
@@ -382,6 +383,11 @@ sub get_google_cookie {
     my $url = BASE_TRENDS_URL .'/explore?geo='. substr($self->{hl},-2);
     my $jar = $self->{cookie_jar};
     my $response = HTTP::Tiny->new(cookie_jar => $jar)->get($url);
+
+    my $nid_cookies = firstval  { $_->{name} eq 'NID' } $jar->cookies_for($url);
+    if (!defined $nid_cookies) {
+        croak "could not read the google NID cookie!"
+    }
     return $jar;
 }
 
@@ -470,11 +476,18 @@ sub _get_data {
         my $json_content = substr($response->{content}, $trim_chars );
         return decode_json($json_content);
     } else {
-        ## TODO Error
+        my $res_dump = Data::Dumper::Dumper($response);
+        if ($response->{status}>=300 && $response->{status}<400) {
+            carp "3xx redirection: $res_dump";
+        } elsif ($response->{status}>=400 && $response->{status}<500) {
+            croak "4xx client errors: $res_dump";
+        } elsif ($response->{status}>=500 && $response->{status}<600) {
+            croak "5xx server errors: $res_dump";
+        } else {
+            croak "Unknown Problem: $res_dump";
+        }
     }
 }
-
-
 
 sub _is_arg_not_of {
     my $arg = shift;
