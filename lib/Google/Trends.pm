@@ -1,5 +1,5 @@
 package Google::Trends;
-use 5.020;
+use 5.010001;
 use strict;
 use warnings;
 

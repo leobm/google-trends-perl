@@ -1,4 +1,4 @@
-requires 'perl', '5.020';
+requires 'perl'   => '5.010001';
 requires 'HTTP::Tinyish', '0.088';
 requires 'HTTP::CookieJar', '0.014';
 requires 'List::MoreUtils', '0.430';
