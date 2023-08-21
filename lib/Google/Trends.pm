@@ -385,6 +385,7 @@ sub get_google_cookie {
     my $response = HTTP::Tiny->new(cookie_jar => $jar)->get($url);
     my $nid_cookie = firstval  { $_->{name} eq 'NID' } $jar->cookies_for($url);
     if (!defined $nid_cookie) {
+        print Data::Dumper::Dumper($response);
         croak "could not read the google NID cookie!"
     }
     return $jar;
@@ -442,6 +443,9 @@ sub _get_data {
     my $method = $args{method} // GET_METHOD;
     my $trim_chars = $args{trim_chars} // 0;
     my $params = $args{params};
+    my $content = $args{content};
+    my $headers = $args{headers} // {};
+
     ## params
 
     my $client = HTTP::Tiny->new(
@@ -453,10 +457,16 @@ sub _get_data {
 
     my $response = undef;
     if ($method eq POST_METHOD) {
-        $response = $client->post($url.'?'.$params_encoded);
+        if (!defined $content) {
+            $content = ''; 
+            $headers->{'content-length'} = 0;
+        }
+        $response = $client->post($url.'?'.$params_encoded,{ 
+            content =>  $content, headers => $headers
+        });
         # DO NOT USE retries or backoff_factor here
     } else {
-        $response = $client->get($url.'?'.$params_encoded);
+        $response = $client->get($url.'?'.$params_encoded, {headers => $headers});
         # DO NOT USE retries or backoff_factor here
     }
 
