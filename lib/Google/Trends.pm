@@ -383,9 +383,8 @@ sub get_google_cookie {
     my $url = BASE_TRENDS_URL .'/explore?geo='. substr($self->{hl},-2);
     my $jar = $self->{cookie_jar};
     my $response = HTTP::Tiny->new(cookie_jar => $jar)->get($url);
-
-    my $nid_cookies = firstval  { $_->{name} eq 'NID' } $jar->cookies_for($url);
-    if (!defined $nid_cookies) {
+    my $nid_cookie = firstval  { $_->{name} eq 'NID' } $jar->cookies_for($url);
+    if (!defined $nid_cookie) {
         croak "could not read the google NID cookie!"
     }
     return $jar;
