@@ -5,7 +5,5 @@ use_ok $_ for qw(
     Google::Trends
 );
 
-Google::Trends::my_test();
-
 done_testing;
 
